@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from "react"
 
-export const EntryForm = ({ entry, moods, onFormSubmit }) => {
+export const EntryForm = ({ entry, moods, tags, onFormSubmit }) => {
     const [editMode, setEditMode] = useState(false)
     const [updatedEntry, setUpdatedEntry] = useState(entry)
+    const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
         setUpdatedEntry(entry)
         if ('id' in entry) {
             setEditMode(true)
+            setIsLoading(false)
         }
         else {
             setEditMode(false)
+            setIsLoading(false)
         }
     }, [entry])
 
@@ -28,13 +31,16 @@ export const EntryForm = ({ entry, moods, onFormSubmit }) => {
 
     const constructNewEntry = () => {
         const copyEntry = { ...updatedEntry }
-        copyEntry.moodId = parseInt(copyEntry.moodId)
+        copyEntry.mood_id = parseInt(copyEntry.mood_id)
         if (!copyEntry.date) {
             copyEntry.date = Date(Date.now()).toLocaleString('en-us').split('GMT')[0]
         }
         onFormSubmit(copyEntry)
     }
 
+    if (isLoading) {
+        return <p>Loading...</p>
+    }
     return (
         <article className="panel is-info">
             <h2 className="panel-heading">{editMode ? "Update Entry" : "Create Entry"}</h2>
@@ -63,12 +69,12 @@ export const EntryForm = ({ entry, moods, onFormSubmit }) => {
                         </div>
                     </div>
                     <div className="field">
-                        <label htmlFor="moodId" className="label">Mood: </label>
+                        <label htmlFor="mood_id" className="label">Mood: </label>
                         <div className="control">
                             <div className="select">
-                                <select name="moodId"
+                                <select name="mood_id"
                                     proptype="int"
-                                    value={updatedEntry.moodId}
+                                    value={updatedEntry.mood_id}
                                     onChange={handleControlledInputChange}>
                                         <option value="0">Select a mood</option>
                                         {moods.map(m => (
@@ -77,6 +83,29 @@ export const EntryForm = ({ entry, moods, onFormSubmit }) => {
                                             </option>
                                         ))}
                                 </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="field">
+                        <label htmlFor="tags" className="label">Tags: </label>
+                        <div className="control">
+                            <div className="checkbox">
+                                {tags.map(t => (
+                                    <label key={t.id}>
+                                        <input type="checkbox" name="tags" id={t.id} checked={updatedEntry.tags.includes(t.id)} onChange={() => {
+                                            const copyEntry = { ...updatedEntry }
+                                            if (copyEntry.tags.includes(t.id)) {
+                                                const index = copyEntry.tags.indexOf(t.id)
+                                                copyEntry.tags.splice(index, 1)
+                                            }
+                                            else {
+                                                copyEntry.tags.push(t.id)
+                                            }
+                                            setUpdatedEntry(copyEntry)
+                                        }}/>
+                                        {t.name}
+                                    </label>
+                                ))}
                             </div>
                         </div>
                     </div>
